@@ -430,9 +430,13 @@ public class SimplePriorities implements Runnable {
 
 
 
-## Synchronized
+## 资源共享问题
+
+### Synchronized
 
 `Synchronized`修饰某个方法意味着某个线程在调用该方法的时候必须要获得该**对象**的锁。
+
+
 
 
 
