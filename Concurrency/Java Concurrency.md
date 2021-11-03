@@ -436,4 +436,182 @@ public class SimplePriorities implements Runnable {
 
 
 
-列表
+## 多线程异常
+
+在**并发编程**中，异常处理与平时的异常处理是不同的，我们来看一下按照平常的普通`try-catch`方法来捕获多线程的异常会出现什么情况：
+
+### 示例代码
+
+```java
+package com.nju.edu.exception;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class NaiveExceptionHandler {
+    public static void main(String[] args) {
+        // 常规的异常处理方式
+        // 在多线程中没有用处
+
+        try {
+            ExecutorService exec = Executors.newCachedThreadPool();
+            exec.execute(new ExceptionThread());
+            exec.shutdown();
+        } catch (RuntimeException e) {
+            // 这句永远都执行不到
+            System.out.println("Exception has been handled!");
+        }
+    }
+    
+}
+
+class ExceptionThread implements Runnable {
+    @Override
+    public void run() {
+        throw new RuntimeException();
+    }
+}
+```
+
+我们来看一下结果：
+
+```java
+Exception in thread "pool-1-thread-1" java.lang.RuntimeException
+        at com.nju.edu.exception.ExceptionThread.run(ExceptionThread.java:10)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:834)
+```
+
+这说明我们并没有捕获到异常，这是为什么呢？原因如下：
+
+1. 异常(Exception)在线程中不共享，**抛出异常**是在线程池中的某个线程抛出的，但**捕获异常**却是由主线程(Thread Main)在进行的。
+2. 抛出与捕获线程的不同导致了我们没有办法捕获异常。
+
+那么我们该如何在多线程中捕获异常呢？答案是这个借口：`Thread.UncaughtExceptionHandler`。这个类提供了默认的`uncaughtException(Thread t, Throwable e)`方法来为多线程捕获异常提供帮助。我们只需要自己实现这个借口或者使用默认的即可。示例代码如下：
+
+### 示例代码
+
+```java
+package com.nju.edu.exception;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+
+class HandlerThreadFactory implements ThreadFactory {
+    
+    @Override
+    public Thread newThread(Runnable r) {
+        System.out.println(this + " creating new Thread.");
+        Thread t = new Thread(r);
+
+        System.out.println("created " + t);
+        // 设置捕获异常
+        // 这里是自己实现了Thread.UncaughtExceptionHandler
+        t.setUncaughtExceptionHandler(new MyUncaughtExceptionHandler());
+        System.out.println("eh = " + t.getUncaughtExceptionHandler());
+
+        return t;
+    }
+}
+
+public class CaptureUncaughtException {
+    public static void main(String[] args) {
+        ExecutorService exec = Executors.newCachedThreadPool(new HandlerThreadFactory());
+        exec.execute(new AnotherExceptionThread());
+        exec.shutdown();
+    }
+    
+}
+
+class AnotherExceptionThread implements Runnable {
+    
+    @Override
+    public void run() {
+        Thread t = Thread.currentThread();
+        System.out.println("run() by " + t);
+        System.out.println("eh = " + t.getUncaughtExceptionHandler());
+        
+        throw new RuntimeException();
+    }
+}
+
+class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
+
+    @Override
+    public void uncaughtException(Thread t, Throwable e) {
+        System.out.println("caught " + e);
+    }
+}
+
+```
+
+运行结果如下：
+
+```java
+com.nju.edu.exception.HandlerThreadFactory@7382f612 creating new Thread.
+created Thread[Thread-0,5,main]
+eh = com.nju.edu.exception.MyUncaughtExceptionHandler@3caeaf62
+run() by Thread[Thread-0,5,main]
+eh = com.nju.edu.exception.MyUncaughtExceptionHandler@3caeaf62
+caught java.lang.RuntimeException
+```
+
+可以看到异常已经被成功捕获~
+
+### 拓展 -- Java中的异常捕获机制
+
+1. 首先我们知道，Java中并不需要声明会抛出`RuntimeException`，调用会抛出`RuntimeException`的方法时我们也不需要去捕获这个异常，`RuntimeException`（运行时异常）是在Java虚拟机执行期间会抛出的一类异常，比如`NullPointerException`和`IndexOutOfBoundException`都是`RuntimeExcpetion`的其中一种。
+2. 其次，对于除了`RuntimeException`之外的异常，如果我们在某个方法中**显式**的抛出了异常（`throw new xxxException`），那么我们在方法的接口上就必须声明我们抛出了该异常（`throws xxException`）。
+
+#### 示例代码
+
+```java
+package com.nju.edu.exception;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+public class ExceptionTest {
+
+    public void throwRuntimeException() {
+        // 直接抛出一个异常
+        // 这里抛出的是RuntimeException，不需要在方法处声明
+        throw new ArithmeticException();
+    }
+
+    public void runWithoutCatch() throws InterruptedException {
+        // 抛出一个非RuntimeException的异常
+        // 需要在方法上声明抛出了这个异常，以便调用者能够捕获
+        throw new InterruptedException();
+    }
+
+    public void runWithCatch() {
+        // 用try-catch来捕获异常
+        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+        try {
+            String str = in.readLine();
+        } catch (IOException e) {
+            System.out.println("catch IOException successfully");
+        }
+    }
+
+    public static void main(String[] args) {
+        ExceptionTest test = new ExceptionTest();
+        try {
+            // 如果这句有异常抛出，那么接下来的语句都不会执行
+            test.throwRuntimeException();
+        } catch (RuntimeException e) {
+            // 实际上我们不需要捕获，因为JVM会帮我们捕获运行时异常
+            System.out.println("catch RuntimeException successfully!");
+        }
+
+    }
+    
+}
+```
+
+其他有关异常的详细机制大家可以自己查阅资料~这里主要是想要介绍一下并发编程中的异常捕获机制和普通的不同。
+
