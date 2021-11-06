@@ -3,7 +3,15 @@
 
 > 本仓库目前收录了
 >
-> 1. **Java并发**
-> 2. **Java注解**
+> 1. **Java并发(Concurrency)**
+> 2. **Java注解(Annotation)**
+> 3. **Java流(Stream)**
 >
 > 相关示例代码，后续还在完善中。
+
+
+
+## Reference
+
+1. 《On Java 8》
+
