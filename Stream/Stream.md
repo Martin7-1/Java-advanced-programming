@@ -139,3 +139,50 @@ public class CollectionToStream {
 ```
 
 在创建`List<Bubble>`对象之后，对集合对象我们只需要简单调用`stream()`。中间操作`map()`会获取流中的所有元素，并且对流中元素应用操作从而产生新的元素，并将其传递到后续的流中。通常`map()`会获取对象并产生新的对象，但这里我们使用了产生特殊的用于数值类型的流：`mapToInt()`方法会将一个对象流转换成为包含整型数字的`IntStream`。
+
+
+
+### 随机数流
+
+`Random`类被一组生成流的方法增强了。我们来看以下代码：
+
+#### 实例代码
+
+```java
+package com.nju.edu.generate;
+
+import java.util.*;
+import java.util.stream.*;
+
+public class RandomGenerators {
+
+    public static <T> void show(Stream<T> stream) {
+        stream.limit(4).forEach(System.out::println);
+        System.out.println("++++++++");
+    }
+    
+    public static void main(String[] args) {
+        Random rand = new Random(47);
+        show(rand.ints().boxed());
+        show(rand.longs().boxed());
+        show(rand.doubles().boxed());
+
+        // 控制上限和下限:
+        show(rand.ints(10, 20).boxed());
+        show(rand.longs(50, 100).boxed());
+        show(rand.doubles(20, 30).boxed());
+
+        // 控制流大小
+        show(rand.ints(2).boxed());
+        show(rand.longs(2).boxed());
+        show(rand.doubles(2).boxed());
+
+        // 控制流的大小和界限
+        show(rand.ints(3, 3, 9).boxed());
+        show(rand.longs(3, 12, 22).boxed());
+        show(rand.doubles(3, 11.5, 12.3).boxed());
+    }
+}
+```
+
+####
