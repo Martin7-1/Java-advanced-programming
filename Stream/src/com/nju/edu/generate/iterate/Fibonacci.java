@@ -1,4 +1,4 @@
-package com.nju.edu.iterate;
+package com.nju.edu.generate.iterate;
 
 import java.util.stream.Stream;
 

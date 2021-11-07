@@ -1,4 +1,4 @@
-package com.nju.edu.random;
+package com.nju.edu.generate.random;
 
 import java.util.Random;
 import java.util.SortedSet;

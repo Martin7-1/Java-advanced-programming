@@ -1,4 +1,4 @@
-package com.nju.edu.arrays;
+package com.nju.edu.generate.arrays;
 
 import java.util.Arrays;
 
