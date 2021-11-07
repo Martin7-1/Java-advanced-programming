@@ -185,4 +185,6 @@ public class RandomGenerators {
 }
 ```
 
-####
+#### 代码分析
+
+1. 用泛型方法`show(Stream<T> stream)`来实现代码复用，虽然`Random`类型只能够生成基本类型的流，但是`stream`提供了`boxed()`流操作将基本类型自动包装成为对应的装箱类型，从而使得`show()`能够接受流
