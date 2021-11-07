@@ -146,7 +146,7 @@ public class CollectionToStream {
 
 `Random`类被一组生成流的方法增强了。我们来看以下代码：
 
-#### 实例代码
+#### 示例代码
 
 ```java
 package com.nju.edu.generate;
@@ -187,4 +187,60 @@ public class RandomGenerators {
 
 #### 代码分析
 
-1. 用泛型方法`show(Stream<T> stream)`来实现代码复用，虽然`Random`类型只能够生成基本类型的流，但是`stream`提供了`boxed()`流操作将基本类型自动包装成为对应的装箱类型，从而使得`show()`能够接受流
+1. 用泛型方法`show(Stream<T> stream)`来实现代码复用，虽然`Random`类型只能够生成基本类型的流，但是`stream`提供了`boxed()`流操作将基本类型自动包装成为对应的装箱类型，从而使得`show()`能够接受流。
+
+
+
+### 循环
+
+`IntStream`类提供了`range()`方法用于生成整型序列的流。我们可以来看一下使用了流之后我们的循环代码会有怎样的变化：
+
+#### 示例代码
+
+```java
+package com.nju.edu.generate;
+
+import static java.util.stream.IntStream.*;
+
+public class Ranges {
+
+    public static void main(String[] args) {
+        int result = 0;
+
+        // 最普通的循环
+        for (int i = 10; i < 20; i++) {
+            result += i;
+        }
+
+        System.out.println("use normal loop, result = " + result);
+
+        int rangeResult = 0;
+        for (int i : range(10, 20).toArray()) {
+            rangeResult += i;
+        }
+
+        System.out.println("apply stream to loop, rangeResult = " + rangeResult);
+
+        // 或者我们还可以更简单一点
+        // 使用流的好处
+        System.out.println("the simple way to use IntStream.range() = " + range(10, 20).sum());
+    }
+    
+}
+```
+
+#### 代码分析
+
+1. 第一种循环是我们传统编写`for`循环的方式。
+2. 第二种方式，我们使用了`range()`来创建了流并且用`toArray()`将其转化成了数组，然后再`for-in`代码块中使用。
+3. 第三种方式是使用流的最好方式，直接用`sum()`方法来对`range()`创建的流中的数字进行操作求和。
+4. 我们可以看到我们使用了`import static`，如果不用的话`range()`需要用类名来调用。
+
+
+
+### generate()
+
+
+
+### iterate()
+
