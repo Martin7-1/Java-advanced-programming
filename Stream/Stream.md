@@ -368,3 +368,45 @@ public class ArraysStream {
 2. `filter(Predicate)`顾名思义，就是进行过滤操作，保留传递给过滤函数后产生的结果为`true`的元素
 
 对于`filter()`的用法，我们用以下示例来说明，该示例用了`isPrime()`来判断某个元素是不是质数，该方法会作为`filter()`的过滤函数。
+
+#### 示例代码
+
+```java
+package com.nju.edu.operation;
+
+import java.util.stream.*;
+import static java.util.stream.LongStream.*;
+
+public class Prime {
+
+    public static boolean isPrime(long n) {
+        // 判断一个数是不是质数
+        // 最朴素的方法，牛顿平方根
+        return rangeClosed(2, (long)(Math.sqrt(n))).noneMatch(i -> n % i == 0);
+    }
+
+    public LongStream numbers() {
+        return iterate(2, i -> i + 1).filter(Prime::isPrime);
+    }
+
+    public static void main(String[] args) {
+        new Prime().numbers()
+        .limit(10)
+        .forEach(n -> System.out.printf("%d ", n));
+
+        System.out.println();
+
+        new Prime().numbers()
+        .skip(90)
+        .limit(10)
+        .forEach(n -> System.out.printf("%d ", n));
+    }
+    
+}
+```
+
+#### 代码分析
+
+1. `rangeClosed()`相比`range()`的区别在于前者的区间是左闭右闭的，而后者是左闭右开的。
+2. `noneMatch()`是只要其参数中有一次lambda表达式不满足的话就返回`false`，在这个例子中就是只要有一次余数为0，那么就返回`false`。同时，只要有一次是`false`，那么该方法就会退出。
+3. 在这段代码中我们使用了`filter(Prime::isPrime)`来作为过滤器移除元素，`isPrime`是过滤函数，这里用方法引用来体现。
