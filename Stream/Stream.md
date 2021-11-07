@@ -240,7 +240,110 @@ public class Ranges {
 
 ### generate()
 
+```java
+package com.nju.edu.generate;
+
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+public class Generator implements Supplier<String> {
+    Random rand = new Random(47);
+    char[] letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+    
+    public String get() {
+        return "" + letters[rand.nextInt(letters.length)];
+    }
+    
+    public static void main(String[] args) {
+        String word = Stream.generate(new Generator())
+                            .limit(30)
+                            .collect(Collectors.joining());
+        System.out.println(word);
+    }
+}
+
+```
+
 
 
 ### iterate()
+
+我们来看一下文档中对该方法的解释：
+
+> `static IntStream iterate(int seed, IntUnaryOperator f)`
+>
+> Returns an infinite sequential ordered IntStream produced by iterative application of a function f to an initial element seed, producing a Stream consisting of seed, f(seed), f(f(seed)), etc.
+
+可以看到该方法实际上是将第一个参数作为**初始值**，传入到第二个参数（实际上是一个方法），然后再将该方法返回的值作为第一个参数继续执行下去。因此该方法实际上是一个不断迭代的过程，我们可以用该方法来很简单的实现斐波那契数列（注意与`limit(int newLimit)`相结合），代码如下：
+
+#### 示例代码
+
+```java
+package com.nju.edu.iterate;
+
+import java.util.stream.Stream;
+
+public class Fibonacci {
+
+    int x = 1;
+
+    public Stream<Integer> iterateNumber() {
+        return Stream.iterate(0, i -> {
+            int result = x + i;
+            x = i;
+            return result;
+        });
+    }
+
+    public static void main(String[] args) {
+        new Fibonacci().iterateNumber()
+                        .skip(20) // 跳过前20个
+                        .limit(10) // 将数量限制在10个
+                        .forEach(System.out::println);
+    }
+    
+}
+```
+
+#### 代码分析
+
+1. 斐波那契数列有两个需要记录的变量，因此这里我们需要用`x`来记录另一个变量
+2. 这里使用了`skip()`方法，它会根据参数来丢弃指定数量的流元素
+
+### Arrays.stream()
+
+我们可以使用`Arrays.stream()`来将数组转化成流，看以下示例代码：
+
+#### 示例代码
+
+```java
+package com.nju.edu.arrays;
+
+import java.util.Arrays;
+
+public class ArraysStream {
+
+    public static void main(String[] args) {
+        Arrays.stream(new double[] {
+            3.14159, 2.718, 1.618
+        }).forEach(n -> System.out.printf("%f ", n));
+
+        System.out.println();
+
+        Arrays.stream(new int[] {
+            1, 3, 5, 7, 9, 11
+        }).forEach(n -> System.out.printf("%d ", n));
+
+        System.out.println();
+
+        // 选择一个子数组进行输出
+        // 这里选择了[3, 6)的子数组进行输出，注意左闭右开
+        Arrays.stream(new int[] {
+            1, 5, 9, 56, 32, 22, 95, 65
+        }, 3, 6).forEach(n -> System.out.printf("%d ", n));
+    }
+    
+}
+```
 
