@@ -410,3 +410,55 @@ public class Prime {
 1. `rangeClosed()`相比`range()`的区别在于前者的区间是左闭右闭的，而后者是左闭右开的。
 2. `noneMatch()`是只要其参数中有一次lambda表达式不满足的话就返回`false`，在这个例子中就是只要有一次余数为0，那么就返回`false`。同时，只要有一次是`false`，那么该方法就会退出。
 3. 在这段代码中我们使用了`filter(Prime::isPrime)`来作为过滤器移除元素，`isPrime`是过滤函数，这里用方法引用来体现。
+
+
+
+### 应用函数到元素 map()
+
+接下来要说的可能是中间操作中最重要的一种操作：`map(Function)`，该方法将函数操作应用在输入流的元素中，并将返回值传递到输出流中。
+
+有几类比较特殊的`map()`
+
+1. `mapToInt(ToIntFunction)`，返回的结果是`IntStream`
+2. `mapToLong(ToLongFunction)`，返回的结果是`LongStream`
+3. `mapToDouble(ToDoubleFunction)`，返回的结果是`DoubleStream`
+
+#### 示例代码
+
+```java
+package com.nju.edu.operation;
+
+import java.util.*;
+import java.util.stream.*;
+import java.util.function.*;
+
+public class FunctionMap {
+    static String[] elements = {"12", "23", "45"};
+
+    static Stream<String> testStream() {
+        return Arrays.stream(elements);
+    }
+
+    static void test(String description, Function<String, String> func) {
+        System.out.println(" ---( " + description + " )--- ");
+        testStream().map(func).forEach(System.out::println);
+    }
+
+    public static void main(String[] args) {
+        test("add brackets", s -> "[" + s + "]");
+
+        test("Increment", s -> {
+            try {
+                return Integer.parseInt(s) + 1 + "";
+            } catch (NumberFormatException e) {
+                return s;
+            }
+        });
+
+        test("replace", s -> s.replace("2", "9"));
+
+        test("Take last digit", s -> s.length() > 0 ? s.charAt(s.length() - 1) + "" : s);
+    }
+}
+```
+
