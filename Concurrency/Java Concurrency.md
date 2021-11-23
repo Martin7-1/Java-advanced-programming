@@ -779,3 +779,10 @@ public class InterferingTask implements Runnable {
 
 如果我们使用多个线程（`newCachedThreadPool`），这些线程都会使用到`run()`方法，改变`val`的状态，这时候我们称这是**线程不安全**的。
 
+如果我们使用了`SingleThreadExecutor`，我们每次都得到一致的结果，尽管 **InterferingTask** 缺乏线程安全性。这是 SingleThreadExecutor 的主要好处 - 因为它一次运行一个任务，这些任务不会相互干扰，因此强加了线程安全性。这种现象称为**线程封闭**，因为在单线程上运行任务限制了它们的影响。线程封闭限制了加速，但可以节省很多困难的调试和重写。
+
+
+
+### Callable
+
+`implements Runnable`并不能够产生返回值。避免竞争条件的最好方法是避免可变的共享状态。我们可以称之为自私的孩子原则：什么都不分享。
