@@ -462,3 +462,127 @@ public class FunctionMap {
 }
 ```
 
+除了`map()`之外，我们还有`flatMap()`来每个流都“扁平化”为元素（这里我理解为将每个元素都从流中取出）。其一开始的功能与`map()`大同小异，两者相差的仅仅是最后`map()`返回的是一个流，而`flatMap()`产生的仅仅是元素而已。
+
+
+
+## Optional类
+
+> skip
+
+
+
+## 终端操作
+
+> 终端操作（Terminal Operations）总是我们在流管道中所做的最后一件事
+
+### 数组
+
+* `toArray()`：将流转换成适当类型的数组
+* `toArray(generator)`：在特殊情况下，生成自定义类型的数组
+
+当我们需要得到数组类型的数据以便于后续操作时，上面的方法就很有用。假设我们需要复用流产生的随机数时，就可以这么使用。
+
+#### 示例代码
+
+```java
+package com.nju.edu.terminal;
+
+import java.util.Arrays;
+import java.util.Random;
+import java.util.stream.IntStream;
+
+public class RandInts {
+
+    private static int[] rints = new Random(47).ints(0, 1000).limit(100).toArray();
+
+    public static IntStream rands() {
+        return Arrays.stream(rints);
+    }
+    
+}
+```
+
+上例将100个数值范围在 0 到 1000 之间的随机数流转换成为数组并将其存储在 `rints` 中。这样一来，每次调用 `rands()` 的时候可以重复获取相同的整数流。
+
+
+
+### 循环
+
+* `forEach(Consumer)`，常见如`System.out::println`作为**Consumer**函数
+* `forEachOrdered(Consumer)`：保证`forEach`按照原始流顺序操作
+
+#### 示例代码
+
+```java
+package com.nju.edu.terminal;
+
+import static com.nju.edu.terminal.RandInts.*;
+
+public class ForEach {
+
+    static final int SZ = 14;
+
+    public static void main(String[] args) {
+        rands().limit(SZ)
+                .forEach(n -> System.out.format("%d ", n));
+        System.out.println();
+
+        rands().limit(SZ)
+                .parallel()
+                .forEach(n -> System.out.format("%d ", n));
+        System.out.println();
+        
+        rands().limit(SZ)
+                .parallel()
+                .forEachOrdered(n -> System.out.format("%d ", n));
+    }
+    
+}
+```
+
+为了方便测试不同大小的流，我们抽离出了 `SZ` 变量。然而即使 `SZ` 值为14也产生了有趣的结果。在第一个流中，未使用 `parallel()` ，因此以元素从 `rands()`出来的顺序输出结果。在第二个流中，引入`parallel()` ，即便流很小，输出的结果的顺序也和前面不一样。这是由于多处理器并行操作的原因，如果你将程序多运行几次，你会发现输出都不相同，这是多处理器并行操作的不确定性造成的结果。
+
+在最后一个流中，同时使用了 `parallel()` 和 `forEachOrdered()` 来强制保持原始流顺序。因此，对非并行流使用 `forEachOrdered()` 是没有任何影响的。
+
+
+
+### 集合
+
+- `collect(Collector)`：使用 **Collector** 收集流元素到结果集合中。
+- `collect(Supplier, BiConsumer, BiConsumer)`：同上，第一个参数 **Supplier** 创建了一个新的结果集合，第二个参数 **BiConsumer** 将下一个元素收集到结果集合中，第三个参数 **BiConsumer** 用于将两个结果集合合并起来。
+
+在这里我们只是简单介绍了几个 **Collectors** 的运用示例。实际上，它还有一些非常复杂的操作实现，可通过查看 `java.util.stream.Collectors` 的 API 文档了解。例如，我们可以将元素收集到任意一种特定的集合中。
+
+假设我们现在为了保证元素有序，将元素存储在 **TreeSet** 中。**Collectors** 里面没有特定的 `toTreeSet()`，但是我们可以通过将集合的构造函数引用传递给 `Collectors.toCollection()`，从而构建任何类型的集合。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
