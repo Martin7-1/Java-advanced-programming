@@ -627,6 +627,8 @@ Java的早期版本，我们可以通过创建自己的`Thread`对象来使用�
 
 但在现在，尤其是Java5之后，主动创建线程的方法并被采用，我们开始采用**线程池**的概念来创建线程（`java.util.concurrent`包下）。你可以将任务创建为单独的类型，然后将其交给 ExecutorService 以运行该任务，而不是为每种不同类型的任务创建新的 Thread 子类型。ExecutorService 为你管理线程，并且在运行任务后重新循环线程而不是丢弃线程。
 
+### 第一个线程池 -- SingleThreadPool
+
 #### 示例代码
 
 ```java
@@ -717,3 +719,63 @@ public class SingleThreadExecutor {
 
 
 > 一旦你调用了 exec.shutdown()，尝试提交新任务将抛出 `RejectedExecutionException`。
+
+
+
+### CachedThreadPool
+
+使用线程的重点是（几乎总是）更快地完成任务，那么我们为什么要限制自己使用 SingleThreadExecutor 呢？查看执行 **Executors** 的 Javadoc，你将看到更多选项。例如 CachedThreadPool：
+
+```java
+package com.nju.edu.threadpool;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
+
+public class CachedThreadPool {
+    
+    public static void main(String[] args) {
+        ExecutorService exec = Executors.newCachedThreadPool();
+        IntStream.range(0, 10)
+            .mapToObj(NapTask::new)
+            .forEach(exec::execute);
+            exec.shutdownNow();
+    }
+}
+```
+
+当你运行这个程序时，你会发现它完成得更快。这是有道理的，每个任务都有自己的线程，所以它们都并行运行，而不是使用相同的线程来顺序运行每个任务。这似乎没毛病，很难理解为什么有人会使用 SingleThreadExecutor。
+
+
+
+### 比较
+
+看了以上的代码，为什么我们还要用`SingleThreadExecutor`呢？我们来看接下来的代码：
+
+#### 示例代码
+
+```java
+package com.nju.edu.threadpool;
+
+public class InterferingTask implements Runnable {
+    
+    final int id;
+    private static Integer val = 0;
+
+    public InterferingTask(int id) {
+        this.id = id;
+    }
+
+    @Override
+    public void run() {
+        for (int i = 0; i < 100; i++) {
+            val++;
+        }
+        System.out.println(id + " " + Thread.currentThread().getName() + " " + val);
+    }
+}
+```
+
+如果我们使用多个线程（`newCachedThreadPool`），这些线程都会使用到`run()`方法，改变`val`的状态，这时候我们称这是**线程不安全**的。
+
