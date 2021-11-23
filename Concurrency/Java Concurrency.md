@@ -619,3 +619,101 @@ public class ExceptionTest {
 
 其他有关异常的详细机制大家可以自己查阅资料~这里主要是想要介绍一下并发编程中的异常捕获机制和普通的不同。
 
+
+
+## 创建和运行任务 -- 有关线程池
+
+Java的早期版本，我们可以通过创建自己的`Thread`对象来使用线程，甚至我们可以创建`Thread`的子类对象来创建自己的特定“任务线程”对象。
+
+但在现在，尤其是Java5之后，主动创建线程的方法并被采用，我们开始采用**线程池**的概念来创建线程（`java.util.concurrent`包下）。你可以将任务创建为单独的类型，然后将其交给 ExecutorService 以运行该任务，而不是为每种不同类型的任务创建新的 Thread 子类型。ExecutorService 为你管理线程，并且在运行任务后重新循环线程而不是丢弃线程。
+
+#### 示例代码
+
+```java
+package com.nju.edu.threadpool;
+
+public class NapTask implements Runnable {
+
+    final int id;
+
+    public NapTask(int id) {
+        this.id = id;
+    }
+
+    @Override
+    public void run() {
+        new Nap(0.1); // seconds
+        System.out.println(this + " " + Thread.currentThread().getName());
+    }
+
+    @Override
+    public String toString() {
+        return "NapTask[" + id + "]";
+    }
+}
+```
+
+```java
+package com.nju.edu.threadpool;
+
+import java.util.concurrent.TimeUnit;
+
+public class Nap {
+
+    public Nap(double t) {
+        try {
+            TimeUnit.SECONDS.sleep((int)t);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Nap(double t, String msg) {
+        this(t);
+        System.out.println(msg);
+    }
+    
+}
+
+```
+
+`Nap`类调用了`TimeUnit.SECONDS.sleep()`方法，该方法获取“当前线程”并在参数中将其置于休眠状态，这意味着该线程被挂起。这并不意味着底层处理器停止。操作系统将其切换到其他任务，例如在你的计算机上运行另一个窗口。OS 任务管理器定期检查 **sleep()** 是否超时。当它执行时，线程被“唤醒”并给予更多处理时间。
+
+```java
+package com.nju.edu.threadpool;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
+
+public class SingleThreadExecutor {
+
+    public static void main(String[] args) {
+        ExecutorService exec = Executors.newSingleThreadExecutor();
+        IntStream.range(0, 10)
+            .mapToObj(NapTask::new)
+            .forEach(exec::execute);
+        
+        System.out.println("All tasks submitted");
+        exec.shutdown();
+
+        while (!exec.isTerminated()) {
+            System.out.println(Thread.currentThread().getName() + " awaiting termination");
+            new Nap(0.1);
+        }
+    }
+    
+}
+```
+
+首先请注意，没有 **SingleThreadExecutor** 类。**newSingleThreadExecutor()** 是 **Executors** 中的一个工厂方法，它创建特定类型的 **ExecutorService** 
+
+我创建了十个 NapTasks 并将它们提交给 ExecutorService，这意味着它们开始自己运行。然而，在此期间，main() 继续做事。当我运行 callexec.shutdown() 时，它告诉 ExecutorService 完成已经提交的任务，但不接受任何新任务。此时，这些任务仍然在运行，因此我们必须等到它们在退出 main() 之前完成。这是通过检查 exec.isTerminated() 来实现的，这在所有任务完成后变为 true。
+
+请注意，main() 中线程的名称是 main，并且只有一个其他线程 pool-1-thread-1。此外，交错输出显示两个线程确实同时运行。
+
+如果你只是调用 exec.shutdown()，程序将完成所有任务。也就是说，不需要 **while(!exec.isTerminated())** 。
+
+
+
+> 一旦你调用了 exec.shutdown()，尝试提交新任务将抛出 `RejectedExecutionException`。
