@@ -558,6 +558,70 @@ public class ForEach {
 
 
 
+我们也可以在流中创建`Map`
+
+#### 示例代码
+
+```java
+package com.nju.edu.terminal;
+
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+class Pair {
+    public final Character c;
+    public final Integer i;
+
+    Pair(Character c, Integer i) {
+        this.c = c;
+        this.i = i;
+    }
+
+    public Character getC() {
+        return this.c;
+    }
+
+    public Integer getI() {
+        return this.i;
+    }
+
+    @Override
+    public String toString() {
+        return "Pair(" + c + ", " + i + ")";
+    }
+}
+
+class RandomPair {
+    Random rand = new Random(47);
+    // an infinite iterator of random capital letters
+    Iterator<Character> capChars = rand.ints(65, 91)
+            .mapToObj(i -> (char)i)
+            .iterator();
+    
+    public Stream<Pair> stream() {
+        return rand.ints(100, 1000).distinct()
+                .mapToObj(i -> new Pair(capChars.next(), i));
+    }
+}
+
+public class MapCollector {
+    
+    public static void main(String[] args) {
+        Map<Integer, Character> map = new RandomPair().stream().limit(8)
+                    .collect(Collectors.toMap(Pair::getI, Pair::getC));
+        
+        System.out.println(map);
+    }
+}
+```
+
+**Pair** 只是一个基础的数据对象。**RandomPair** 创建了随机生成的 **Pair** 对象流。在 Java 中，我们不能直接以某种方式组合两个流。所以我创建了一个整数流，并且使用 `mapToObj()` 将整数流转化成为 **Pair** 流。 **capChars**的随机大写字母迭代器创建了流，然后`next()`让我们可以在`stream()`中使用这个流。就我所知，这是将多个流组合成新的对象流的唯一方法。
+
+在这里，我们只使用最简单形式的 `Collectors.toMap()`，这个方法只需要两个从流中获取键和值的函数。还有其他重载形式，其中一种当是键发生冲突时，使用一个函数来处理冲突。
+
 
 
 
