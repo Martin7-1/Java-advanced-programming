@@ -624,7 +624,58 @@ public class MapCollector {
 
 
 
+### 组合
 
+- `reduce(BinaryOperator)`：使用 **BinaryOperator** 来组合所有流中的元素。因为流可能为空，其返回值为 **Optional**。
+- `reduce(identity, BinaryOperator)`：功能同上，但是使用 **identity** 作为其组合的初始值。因此如果流为空，**identity** 就是结果。
+- `reduce(identity, BiFunction, BinaryOperator)`：更复杂的使用形式（暂不介绍），这里把它包含在内，因为它可以提高效率。通常，我们可以显式地组合 `map()` 和 `reduce()` 来更简单的表达它。
+
+#### 代码示例
+
+```java
+package com.nju.edu.terminal;
+
+import java.util.Random;
+import java.util.stream.Stream;
+
+class Frobnitz {
+    int size;
+
+    public Frobnitz(int size) {
+        this.size = size;
+    }
+
+    @Override
+    public String toString() {
+        return "Frobnitz(" + size + ")";
+    }
+
+    // Generator
+    static Random rand = new Random(47);
+    static final int BOUND = 100;
+
+    static Frobnitz supply() {
+        return new Frobnitz(rand.nextInt(BOUND));
+    }
+}
+
+public class Reduce {
+    
+    public static void main(String[] args) {
+        Stream.generate(Frobnitz::supply)
+                .limit(10)
+                .peek(System.out::println)
+                .reduce((fr0, fr1) -> fr0.size < 50 ? fr0 : fr1)
+                .ifPresent(System.out::println);
+    }
+}
+```
+
+我们使用了没有“初始值”作为第一个参数的 `reduce()`方法，所以产生的结果是 **Optional** 类型。`Optional.ifPresent()` 方法只有在结果非空的时候才会调用 `Consumer<Frobnitz>` （`println` 方法可以被调用是因为 **Frobnitz** 可以通过 `toString()` 方法转换成 **String**）。
+
+Lambda 表达式中的第一个参数 `fr0` 是 `reduce()` 中上一次调用的结果。而第二个参数 `fr1` 是从流传递过来的值。
+
+`reduce()` 中的 Lambda 表达式使用了三元表达式来获取结果，当 `fr0` 的 `size` 值小于 50 的时候，将 `fr0` 作为结果，否则将序列中的下一个元素即 `fr1`作为结果。当取得第一个 `size` 值小于 50 的 `Frobnitz`，只要得到这个结果就会忽略流中其他元素。这是个非常奇怪的限制， 但也确实让我们对 `reduce()` 有了更多的了解。
 
 
 
