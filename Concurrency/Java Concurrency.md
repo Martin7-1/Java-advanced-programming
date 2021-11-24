@@ -886,6 +886,32 @@ public class Futures {
 
 因为当你调用 **get()** 时，**Future** 会阻塞，所以它只能解决等待任务完成才暴露问题。最终，**Futures** 被认为是一种无效的解决方案，现在不鼓励，我们推荐 Java 8 的 **CompletableFuture** ，这将在本章后面探讨。当然，你仍会在遗留库中遇到 Futures。
 
+我们可以使用**并行流**来解决这个问题：
+
+```java
+package com.nju.edu.threadpool;
+
+import java.util.stream.IntStream;
+
+public class CountingStream {
+
+    public static void main(String[] args) {
+        System.out.println(
+            IntStream.range(0, 10)
+                .parallel()
+                .mapToObj(CountingTask::new)
+                .map(ct -> ct.call())
+                .reduce(0, Integer::sum)
+        );
+    }
+    
+}
+```
+
+
+
+## 终止耗时任务
+
 
 
 
