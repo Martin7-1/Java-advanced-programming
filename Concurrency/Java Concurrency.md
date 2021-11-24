@@ -786,3 +786,127 @@ public class InterferingTask implements Runnable {
 ### Callable
 
 `implements Runnable`并不能够产生返回值。避免竞争条件的最好方法是避免可变的共享状态。我们可以称之为自私的孩子原则：什么都不分享。
+
+#### 代码示例
+
+```java
+package com.nju.edu.threadpool;
+
+import java.util.concurrent.Callable;
+
+public class CountingTask implements Callable<Integer> {
+    final int id;
+
+    public CountingTask(int id) {
+        this.id = id;
+    }
+
+    @Override
+    public Integer call() {
+        Integer val = 0;
+        for (int i = 0; i < 100; i++) {
+            val++;
+        }
+        System.out.println(id + " " + Thread.currentThread().getName() + " " + val);
+
+        return val;
+    }
+}
+```
+
+**call() 完全独立于所有其他CountingTasks生成其结果**，这意味着没有可变的共享状态。
+
+**ExecutorService** 允许你使用 `invokeAll()` 启动集合中的每个Callable
+
+```java
+package com.nju.edu.threadpool;
+
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+public class CachedThreadPool3 {
+
+    public static Integer extractResult(Future<Integer> f) {
+        try {
+            return f.get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        ExecutorService exec = Executors.newCachedThreadPool();
+        List<CountingTask> tasks = IntStream.range(0, 10)
+                    .mapToObj(CountingTask::new)
+                    .collect(Collectors.toList());
+        List<Future<Integer>> futures = exec.invokeAll(tasks);
+        Integer sum = futures.stream()
+                    .map(CachedThreadPool3::extractResult)
+                    .reduce(0, Integer::sum);
+        System.out.println("sum = " + sum);
+        exec.shutdown();
+    }
+    
+}
+```
+
+只有在所有任务完成后，`invokeAll()`才会返回一个`Future`列表，每个任务的结果都存在一个`Future`中。**Future** 是 Java 5 中引入的机制，允许你提交任务而无需等待它完成。在这里，我们使用 **ExecutorService.submit()** :
+
+```java
+package com.nju.edu.threadpool;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+public class Futures {
+
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
+        ExecutorService exec = Executors.newSingleThreadExecutor();
+        Future<Integer> f = exec.submit(new CountingTask(99));
+        // 如果任务尚未完成，f.get()的调用会阻塞直到结果产生
+        System.out.println(f.get());
+
+        exec.shutdown();
+    }
+    
+}
+```
+
+> **注意：**当你的任务在尚未完成的 **Future** 上调用`get()`时，调用会阻塞（等待）直到结果可用。
+
+但这意味着，在 **CachedThreadPool3.java** 中，**Future** 似乎是多余的，因为 **invokeAll()** 甚至在所有任务完成之前都不会返回。但是，这里的 Future 并不用于延迟结果，而是用于捕获任何可能发生的异常。
+
+还要注意在 **CachedThreadPool3.java.get()** 中抛出异常，因此 **extractResult()** 在 Stream 中执行此提取。
+
+因为当你调用 **get()** 时，**Future** 会阻塞，所以它只能解决等待任务完成才暴露问题。最终，**Futures** 被认为是一种无效的解决方案，现在不鼓励，我们推荐 Java 8 的 **CompletableFuture** ，这将在本章后面探讨。当然，你仍会在遗留库中遇到 Futures。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
