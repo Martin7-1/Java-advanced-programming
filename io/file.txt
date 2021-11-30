@@ -1,0 +1,3 @@
+I am a student of Nanjing University.
+I am 20 years old and I am major in software engineering.
+This year, I study Data Structure and Alogrithm, Data Science and Computer Orgnization and Architecture
