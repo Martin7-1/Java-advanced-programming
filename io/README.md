@@ -131,6 +131,100 @@ public class FileStreamDemo {
    2. `off`：偏移量(offset)，即存放的数据从`byte[off]`开始
    3. `len`：所要读取数据的长度`len`
 
+#### Byte
+
+`ByteArrayInputStream`和`ByteArrayOutputStream`是用来完成内存的输入和输出功能的
+
+#### 管道流
+
+`PipedOutputStream`和`PipedInputStream`。管道流的作用主要是可以进行两个线程间的通信
+
+如果要进行管道通信，则必须把`PipedOutputStream`连接到`PipedInputStream`上。为此，`PipedOutputStream`中提供了`connect()`方法
+
+```java
+public class PipedStreamDemo {
+
+    public static void main(String[] args) {
+        Send s = new Send();
+        Receive r = new Receive();
+        try {
+            s.getPos().connect(r.getPis()); // 连接管道
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        new Thread(s).start(); // 启动线程
+        new Thread(r).start(); // 启动线程
+    }
+
+    static class Send implements Runnable {
+
+        private PipedOutputStream pos = null;
+
+        Send() {
+            pos = new PipedOutputStream(); // 实例化输出流
+        }
+
+        @Override
+        public void run() {
+            String str = "Hello World!!!";
+            try {
+                pos.write(str.getBytes());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                pos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        /**
+         * 得到此线程的管道输出流
+         */
+        PipedOutputStream getPos() {
+            return pos;
+        }
+
+    }
+
+    static class Receive implements Runnable {
+
+        private PipedInputStream pis = null;
+
+        Receive() {
+            pis = new PipedInputStream();
+        }
+
+        @Override
+        public void run() {
+            byte[] b = new byte[1024];
+            int len = 0;
+            try {
+                len = pis.read(b);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                pis.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            System.out.println("接收的内容为：" + new String(b, 0, len));
+        }
+
+        /**
+         * 得到此线程的管道输入流
+         */
+        PipedInputStream getPis() {
+            return pis;
+        }
+
+    }
+
+}
+```
+
 ### Character Streams
 
 * 输入字符流：`Reader`
