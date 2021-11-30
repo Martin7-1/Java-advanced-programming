@@ -117,8 +117,19 @@ public class FileStreamDemo {
     }
     
 }
-
 ```
+
+**关于`InputStream.read()`**
+
+`InputStream.read()`一共有三种实现，有着一点区别，下面介绍一下这三种实现方法
+
+1. `read()`：没有任何参数的`read`，此时`InputStream`会一个字节一个字节的读取文件中的数据，并且以`int`的形式返回（以下两种都是如此），即范围是（0 - 255，ACSII），如果遇到了读到了文件的末尾，那么该方法会返回-1.
+2. `read(byte[])`：参数中有一个`byte[]`，返回的是读取的数据的长度，如果返回-1表示因为在文件的末尾所以没有读到数据
+   1. `byte[]`是要读取的数据存储的数组
+3. `read(byte[] int off, int len)`：参数中的三个参数分别指的是：
+   1. `byte[]`：读取出的数据所要存放的地方
+   2. `off`：偏移量(offset)，即存放的数据从`byte[off]`开始
+   3. `len`：所要读取数据的长度`len`
 
 ### Character Streams
 

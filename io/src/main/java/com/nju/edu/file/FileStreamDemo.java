@@ -40,6 +40,7 @@ public class FileStreamDemo {
 
         InputStream in = new FileInputStream(file);
         byte[] bytes = new byte[(int) file.length()];
+        // 这里有三种read
         int len = in.read(bytes);
         System.out.println("读入数据的长度: " + len);
 
