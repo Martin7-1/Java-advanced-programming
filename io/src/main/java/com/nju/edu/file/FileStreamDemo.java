@@ -12,7 +12,8 @@ public class FileStreamDemo {
 
     public static void main(String[] args) throws Exception {
         write(FILEPATH);
-        read(FILEPATH);
+        String res = read(FILEPATH);
+        System.out.println("content is " + res);
     }
 
     public static void write(String filepath) throws Exception {
@@ -33,7 +34,7 @@ public class FileStreamDemo {
         out.close();
     }
 
-    public static void read(String filepath) throws Exception {
+    public static String read(String filepath) throws Exception {
         // 同上
         File file = new File(filepath);
 
@@ -44,7 +45,8 @@ public class FileStreamDemo {
 
         in.close();
         // 这里用String.valueof和new String结果会不一样
-        System.out.println("内容为: \n" + new String(bytes));
+
+        return new String(bytes);
     }
     
 }
