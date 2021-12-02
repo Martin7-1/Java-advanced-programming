@@ -293,6 +293,26 @@ NIO 包含下面几个核心的组件：
 
 
 
+### Channel(通道)
+
+通道（`Channel`）是对 BIO 中的流的模拟，可以通过它读写数据。
+
+Channel，类似在 Linux 之类操作系统上看到的文件描述符，是 NIO 中被用来支持批量式 IO 操作的一种抽象。
+
+File 或者 Socket，通常被认为是比较高层次的抽象，而 Channel 则是更加操作系统底层的一种抽象，这也使得 NIO 得以充分利用现代操作系统底层机制，获得特定场景的性能优化，例如，DMA（Direct Memory Access）等。不同层次的抽象是相互关联的，我们可以通过 Socket 获取 Channel，反之亦然。
+
+通道与流的不同之处在于：
+
+- **流是单向的** - 一个流只能单纯的负责读或写。
+- **通道是双向的** - 一个通道可以同时用于读写。
+
+通道包括以下类型：
+
+- `FileChannel`：从文件中读写数据；
+- `DatagramChannel`：通过 UDP 读写网络中数据；
+- `SocketChannel`：通过 TCP 读写网络中数据；
+- `ServerSocketChannel`：可以监听新进来的 TCP 连接，对每一个新进来的连接都会创建一个 SocketChannel
+
 
 
 

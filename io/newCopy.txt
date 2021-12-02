@@ -1,0 +1,6 @@
+I am a student of Nanjing University.
+I am 20 years old and I am major in software engineering.
+This year, I study Data Structure and Alogrithm, Data Science and Computer Orgnization and Architecture
+Next year, I will study database and network in computer. I also will learn how to use object-oriented in cpp.
+Also, springboot + Mybatis + Vue is the final homework in the next term.
+So, I must learn java and cpp during spring festival so that my study will go on.
